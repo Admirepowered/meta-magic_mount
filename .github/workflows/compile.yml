@@ -8,7 +8,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: env
+        run: |
+          GIT_COUNT=$(git rev-list --count HEAD 2>/dev/null)
+          GIT_TAG=$(git describe --tags 2>/dev/null || echo "v0.0.0ci")
+          echo "GCOUNT=$GIT_COUNT" >> $GITHUB_ENV
+          echo "GTAG=$GIT_TAG" >> $GITHUB_ENV
+          sed -i "s|^version=.*|version=$GIT_TAG|" "template/module.prop"
+          sed -i "s|^versionCode=.*|versionCode=$GIT_COUNT|" "template/module.prop"
+          sed -i "s|^updateJson=.*||" "template/module.prop"
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -16,7 +29,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: pnpm
 
       - name: grab zig
         run: |
@@ -62,5 +74,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: zip
+          name: meta-mm-ci-${{ env.GTAG }}-${{ env.GCOUNT }}
           path: template
