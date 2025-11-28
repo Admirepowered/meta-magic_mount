@@ -1,13 +1,6 @@
 mod node;
 mod try_umount;
 
-pub(super) const DISABLE_FILE_NAME: &str = "disable";
-pub(super) const REMOVE_FILE_NAME: &str = "remove";
-pub(super) const SKIP_MOUNT_FILE_NAME: &str = "skip_mount";
-pub(super) const REPLACE_DIR_FILE_NAME: &str = ".replace";
-pub(super) const REPLACE_DIR_XATTR: &str = "trusted.overlay.opaque";
-
-pub const UMOUNT: AtomicBool = AtomicBool::new(false);
 use std::{
     fs::{self, DirEntry, create_dir, create_dir_all, read_dir, read_link},
     os::unix::fs::{MetadataExt, symlink},
@@ -32,6 +25,15 @@ use crate::{
     },
     utils::{ensure_dir_exists, lgetfilecon, lsetfilecon},
 };
+
+
+pub(super) const DISABLE_FILE_NAME: &str = "disable";
+pub(super) const REMOVE_FILE_NAME: &str = "remove";
+pub(super) const SKIP_MOUNT_FILE_NAME: &str = "skip_mount";
+pub(super) const REPLACE_DIR_FILE_NAME: &str = ".replace";
+pub(super) const REPLACE_DIR_XATTR: &str = "trusted.overlay.opaque";
+
+pub static UMOUNT: AtomicBool = AtomicBool::new(false);
 
 fn collect_module_files(module_dir: &Path, extra_partitions: &[String]) -> Result<Option<Node>> {
     let mut root = Node::new_root("");
