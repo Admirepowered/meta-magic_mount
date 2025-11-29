@@ -104,7 +104,8 @@ fn collect_module_files(module_dir: &Path, extra_partitions: &[String]) -> Resul
     }
 }
 
-fn clone_symlink<Src: AsRef<Path>, Dst: AsRef<Path>>(src: Src, dst: Dst) -> Result<()> {
+fn clone_symlink<S>(src: S, dst: S) -> Result<()>
+where S: AsRef<Path> {
     let src_symlink = read_link(src.as_ref())?;
     symlink(&src_symlink, dst.as_ref())?;
     lsetfilecon(dst.as_ref(), lgetfilecon(src.as_ref())?.as_str())?;
@@ -117,11 +118,12 @@ fn clone_symlink<Src: AsRef<Path>, Dst: AsRef<Path>>(src: Src, dst: Dst) -> Resu
     Ok(())
 }
 
-fn mount_mirror<P: AsRef<Path>, WP: AsRef<Path>>(
+fn mount_mirror<P>(
     path: P,
-    work_dir_path: WP,
+    work_dir_path: P,
     entry: &DirEntry,
-) -> Result<()> {
+) -> Result<()> 
+where P: AsRef<Path>{
     let path = path.as_ref().join(entry.file_name());
     let work_dir_path = work_dir_path.as_ref().join(entry.file_name());
     let file_type = entry.file_type()?;
@@ -165,12 +167,10 @@ fn mount_mirror<P: AsRef<Path>, WP: AsRef<Path>>(
 }
 
 #[allow(clippy::too_many_lines)]
-fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
-    path: P,
-    work_dir_path: WP,
-    current: Node,
-    has_tmpfs: bool,
-) -> Result<()> {
+fn do_magic_mount<P>(path: P, work_dir_path: P, current: Node, has_tmpfs: bool) -> Result<()>
+where
+    P: AsRef<Path>,
+{
     let mut current = current;
     let path = path.as_ref().join(&current.name);
     let work_dir_path = work_dir_path.as_ref().join(&current.name);
@@ -391,12 +391,15 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
     Ok(())
 }
 
-pub fn magic_mount<T: AsRef<Path>>(
-    tmp_path: T,
+pub fn magic_mount<P>(
+    tmp_path: P,
     module_dir: &Path,
     mount_source: &str,
     extra_partitions: &[String],
-) -> Result<()> {
+) -> Result<()>
+where
+    P: AsRef<Path>,
+{
     if let Some(root) = collect_module_files(module_dir, extra_partitions)? {
         log::debug!("collected: {root}");
 
@@ -407,7 +410,7 @@ pub fn magic_mount<T: AsRef<Path>>(
         mount(mount_source, &tmp_dir, "tmpfs", MountFlags::empty(), None).context("mount tmp")?;
         mount_change(&tmp_dir, MountPropagationFlags::PRIVATE).context("make tmp private")?;
 
-        let result = do_magic_mount("/", &tmp_dir, root, false);
+        let result = do_magic_mount(Path::new("/"), tmp_dir.as_path(), root, false);
 
         if let Err(e) = unmount(&tmp_dir, UnmountFlags::DETACH) {
             log::error!("failed to unmount tmp {e}");

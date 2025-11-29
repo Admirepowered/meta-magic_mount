@@ -135,7 +135,10 @@ impl fmt::Display for Node {
 }
 
 impl Node {
-    pub fn collect_module_files<T: AsRef<Path>>(&mut self, module_dir: T) -> Result<bool> {
+    pub fn collect_module_files<P>(&mut self, module_dir: P) -> Result<bool>
+    where
+        P: AsRef<Path>,
+    {
         let dir = module_dir.as_ref();
         let mut has_file = false;
         for entry in dir.read_dir()?.flatten() {
@@ -183,9 +186,9 @@ impl Node {
         if exists == 0 { Ok(true) } else { Ok(false) }
     }
 
-    pub fn new_root<T>(name: T) -> Self
+    pub fn new_root<S>(name: S) -> Self
     where
-        T: AsRef<str> + Into<String>,
+        S: AsRef<str> + Into<String>,
     {
         Self {
             name: name.into(),
@@ -197,7 +200,11 @@ impl Node {
         }
     }
 
-    pub fn new_module<T: ToString>(name: &T, entry: &DirEntry) -> Option<Self> {
+    pub fn new_module<S>(name: &S, entry: &DirEntry) -> Option<Self>
+    where
+        S: AsRef<str> + Into<String>,
+        std::string::String: for<'a> From<&'a S>,
+    {
         if let Ok(metadata) = entry.metadata() {
             let path = entry.path();
             let file_type = if metadata.file_type().is_char_device() && metadata.rdev() == 0 {
@@ -215,7 +222,7 @@ impl Node {
                     false
                 };
                 return Some(Self {
-                    name: name.to_string(),
+                    name: name.into(),
                     file_type,
                     children: HashMap::default(),
                     module_path: Some(path),

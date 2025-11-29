@@ -11,7 +11,10 @@ use extattr::{Flags as XattrFlags, lsetxattr};
 use crate::defs::SELINUX_XATTR;
 use crate::defs::{TEMP_DIR_SUFFIX, TMPFS_CANDIDATES};
 
-pub fn lsetfilecon<P: AsRef<Path>>(path: P, con: &str) -> Result<()> {
+pub fn lsetfilecon<P>(path: P, con: &str) -> Result<()>
+where
+    P: AsRef<Path>,
+{
     #[cfg(any(target_os = "linux", target_os = "android"))]
     lsetxattr(&path, SELINUX_XATTR, con, XattrFlags::empty()).with_context(|| {
         format!(
@@ -23,7 +26,10 @@ pub fn lsetfilecon<P: AsRef<Path>>(path: P, con: &str) -> Result<()> {
 }
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
-pub fn lgetfilecon<P: AsRef<Path>>(path: P) -> Result<String> {
+pub fn lgetfilecon<P>(path: P) -> Result<String>
+where
+    P: AsRef<Path>,
+{
     let con = extattr::lgetxattr(&path, SELINUX_XATTR).with_context(|| {
         format!(
             "Failed to get SELinux context for {}",
@@ -35,11 +41,17 @@ pub fn lgetfilecon<P: AsRef<Path>>(path: P) -> Result<String> {
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "android")))]
-pub fn lgetfilecon<P: AsRef<Path>>(path: P) -> Result<String> {
+pub fn lgetfilecon<P>(path: P) -> Result<String>
+where
+    P: AsRef<Path>,
+{
     unimplemented!()
 }
 
-pub fn ensure_dir_exists<T: AsRef<Path>>(dir: T) -> Result<()> {
+pub fn ensure_dir_exists<P>(dir: P) -> Result<()>
+where
+    P: AsRef<Path>,
+{
     let result = create_dir_all(&dir);
     if dir.as_ref().is_dir() && result.is_ok() {
         Ok(())
