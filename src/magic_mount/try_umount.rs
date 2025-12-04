@@ -1,7 +1,7 @@
 #![allow(clippy::unreadable_literal)]
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
-use std::{os::fd::RawFd, path::Path, sync::OnceLock};
+use std::{ffi::CString, io, os::fd::RawFd, path::Path, sync::OnceLock};
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 use anyhow::Result;
@@ -38,8 +38,6 @@ pub fn send_unmountable<P>(target: P) -> Result<()>
 where
     P: AsRef<Path>,
 {
-    use std::ffi::CString;
-
     use rustix::path::Arg;
 
     let path = CString::new(target.as_ref().as_str()?)?;
@@ -59,8 +57,6 @@ where
         let ret = libc::ioctl(fd as libc::c_int, KSU_IOCTL_ADD_TRY_UMOUNT as i32, &cmd);
 
         if ret < 0 {
-            use std::io;
-
             log::error!(
                 "umount {} failed: {}",
                 target.as_ref().display(),
