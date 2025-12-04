@@ -102,6 +102,10 @@ pub fn select_temp_dir() -> Result<PathBuf> {
         let path = Path::new(candidate);
         log::debug!("checking tmpfs candidate: {}", path.display());
 
+        if !path.exists() {
+            continue;
+        }
+
         if is_writable_tmpfs(path) {
             let temp_dir = path.join(TEMP_DIR_SUFFIX);
             log::info!(
