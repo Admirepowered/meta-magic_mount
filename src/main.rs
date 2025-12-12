@@ -91,6 +91,10 @@ fn main() -> Result<()> {
 
     init_logger(config.verbose);
 
+    if std::env::var("KSU").is_err() {
+        log::error!("only support KernelSU!!");
+    }
+
     log::info!("Magic Mount Starting");
 
     log::info!("config info:\n{config}");
