@@ -19,6 +19,7 @@ use std::io::Write;
 use anyhow::{Context, Result};
 use env_logger::Builder;
 use mimalloc::MiMalloc;
+use rustix::mount::{MountFlags, mount};
 
 use crate::{config::Config, defs::CONFIG_FILE_DEFAULT};
 
@@ -100,7 +101,17 @@ fn main() -> Result<()> {
         utils::select_temp_dir().context("failed to select temp dir automatically")?
     };
 
-    utils::ensure_temp_dir(&tempdir)?;
+    utils::ensure_dir_exists(&tempdir)?;
+
+    if let Err(e) = mount(
+        &config.mountsource,
+        &tempdir,
+        "tmpfs",
+        MountFlags::empty(),
+        None,
+    ) {
+        log::warn!("do temp dir mount failed: {}", e);
+    }
 
     let result = magic_mount::magic_mount(
         &tempdir,
@@ -109,8 +120,6 @@ fn main() -> Result<()> {
         &config.partitions,
         config.umount,
     );
-
-    utils::cleanup_temp_dir(&tempdir);
 
     match result {
         Ok(()) => {

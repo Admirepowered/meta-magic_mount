@@ -1,5 +1,5 @@
 use std::{
-    fs::{create_dir_all, read_to_string, remove_dir_all, remove_file, write},
+    fs::create_dir_all,
     path::{Path, PathBuf},
 };
 
@@ -9,7 +9,7 @@ use extattr::{Flags as XattrFlags, lsetxattr};
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 use crate::defs::SELINUX_XATTR;
-use crate::defs::{TEMP_DIR_SUFFIX, TMPFS_CANDIDATES};
+use crate::defs::{TMPFS_CANDIDATES};
 
 pub fn lsetfilecon<P>(path: P, con: &str) -> Result<()>
 where
@@ -60,40 +60,16 @@ where
     }
 }
 
-fn is_writable_tmpfs(path: &Path) -> bool {
-    if !path.is_dir() {
-        log::debug!("{} is not a directory", path.display());
-        return false;
+fn is_ok_empty<P>(dir: P) -> bool
+where
+    P: AsRef<Path>,
+{
+    use std::result::Result::Ok;
+
+    match dir.as_ref().read_dir() {
+        Ok(mut entries) => entries.next().is_none(),
+        Err(_) => false,
     }
-
-    if let Ok(mounts) = read_to_string("/proc/mounts") {
-        let path_str = path.to_string_lossy();
-        let is_tmpfs = mounts.lines().any(|line| {
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            parts.len() >= 3 && parts[1] == path_str && parts[2] == "tmpfs"
-        });
-
-        if !is_tmpfs {
-            log::debug!("{} is not a tmpfs", path.display());
-            return false;
-        }
-        log::debug!("{} is a tmpfs", path.display());
-    } else {
-        log::debug!("failed to read /proc/mounts");
-        return false;
-    }
-
-    let test_file = path.join(format!(".mm_test_{}", std::process::id()));
-    let writable = write(&test_file, b"test").is_ok();
-
-    if writable {
-        let _ = remove_file(&test_file);
-        log::debug!("{} is writable", path.display());
-    } else {
-        log::debug!("{} is not writable", path.display());
-    }
-
-    writable
 }
 
 pub fn select_temp_dir() -> Result<PathBuf> {
@@ -107,14 +83,9 @@ pub fn select_temp_dir() -> Result<PathBuf> {
             continue;
         }
 
-        if is_writable_tmpfs(path) {
-            let temp_dir = path.join(TEMP_DIR_SUFFIX);
-            log::info!(
-                "selected tmpfs: {} -> {}",
-                path.display(),
-                temp_dir.display()
-            );
-            return Ok(temp_dir);
+        if is_ok_empty(path) {
+            log::info!("selected tmpfs: {}", path.display(),);
+            return Ok(path.to_path_buf());
         }
     }
 
@@ -122,30 +93,4 @@ pub fn select_temp_dir() -> Result<PathBuf> {
         "no writable tmpfs found in candidates: {}",
         TMPFS_CANDIDATES.join(", ")
     )
-}
-
-pub fn ensure_temp_dir(temp_dir: &Path) -> Result<()> {
-    if temp_dir.exists() {
-        log::debug!("cleaning existing temp dir: {}", temp_dir.display());
-        remove_dir_all(temp_dir)
-            .with_context(|| format!("failed to clean temp dir {}", temp_dir.display()))?;
-    }
-
-    create_dir_all(temp_dir)
-        .with_context(|| format!("failed to create temp dir {}", temp_dir.display()))?;
-
-    log::debug!("temp dir ready: {}", temp_dir.display());
-    Ok(())
-}
-
-pub fn cleanup_temp_dir(temp_dir: &Path) {
-    if let Err(e) = remove_dir_all(temp_dir) {
-        log::warn!(
-            "failed to clean up temp dir {}: {:#}",
-            temp_dir.display(),
-            e
-        );
-    } else {
-        log::debug!("cleaned up temp dir: {}", temp_dir.display());
-    }
 }
