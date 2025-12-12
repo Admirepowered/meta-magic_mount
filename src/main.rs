@@ -95,11 +95,7 @@ fn main() -> Result<()> {
 
     log::info!("config info:\n{config}");
 
-    let tempdir = if let Some(temp) = config.tempdir {
-        temp
-    } else {
-        utils::select_temp_dir().context("failed to select temp dir automatically")?
-    };
+    let tempdir = utils::select_temp_dir().context("failed to select temp dir automatically")?;
 
     utils::ensure_dir_exists(&tempdir)?;
 

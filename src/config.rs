@@ -9,7 +9,6 @@ use crate::defs::CONFIG_FILE_DEFAULT;
 pub struct Config {
     #[serde(default = "default_moduledir")]
     pub moduledir: PathBuf,
-    pub tempdir: Option<PathBuf>,
     #[serde(default = "default_mountsource")]
     pub mountsource: String,
     pub verbose: bool,
@@ -29,7 +28,6 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             moduledir: default_moduledir(),
-            tempdir: None,
             mountsource: default_mountsource(),
             verbose: false,
             umount: false,
@@ -41,11 +39,6 @@ impl Default for Config {
 impl fmt::Display for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "module real path: {}", self.moduledir.display())?;
-        if let Some(p) = self.tempdir.clone() {
-            writeln!(f, "temp dir will use: {}", p.display())?;
-        } else {
-            writeln!(f, "temp dir will use auto find temp")?;
-        }
         writeln!(f, "mount source: {}", self.mountsource)?;
         if self.verbose {
             writeln!(f, "u enable debug mode!!")?;

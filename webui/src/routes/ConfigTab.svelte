@@ -4,14 +4,17 @@
   import ChipInput from '../components/ChipInput.svelte';
   import BottomActions from '../components/BottomActions.svelte';
   import './ConfigTab.css';
+  
   let initialConfigStr = $state('');
+  
   const isValidPath = (p) => !p || (p.startsWith('/') && p.length > 1);
   let invalidModuleDir = $derived(!isValidPath(store.config.moduledir));
-  let invalidTempDir = $derived(store.config.tempdir && !isValidPath(store.config.tempdir));
+  
   let isDirty = $derived.by(() => {
     if (!initialConfigStr) return false;
     return JSON.stringify(store.config) !== initialConfigStr;
   });
+  
   $effect(() => {
     if (!store.loading.config && store.config) {
       if (!initialConfigStr || initialConfigStr === JSON.stringify(store.config)) {
@@ -19,8 +22,9 @@
       }
     }
   });
+  
   function save() {
-    if (invalidModuleDir || invalidTempDir) {
+    if (invalidModuleDir) {
       store.showToast(store.L.config.invalidPath, "error");
       return;
     }
@@ -28,20 +32,20 @@
         initialConfigStr = JSON.stringify(store.config);
     });
   }
+  
   function reload() {
     store.loadConfig().then(() => {
         initialConfigStr = JSON.stringify(store.config);
     });
   }
-  function resetTempDir() {
-    store.config.tempdir = "";
-  }
+  
   function toggle(key) {
     if (typeof store.config[key] === 'boolean') {
       store.config[key] = !store.config[key];
     }
   }
 </script>
+
 <div class="config-container">
   <section class="config-group">
     <div class="input-card">
@@ -55,21 +59,6 @@
         </div>
       </div>
       <div class="divider"></div>
-      <div class="text-field-row" class:error={invalidTempDir}>
-        <div class="icon-slot">
-          <svg width="24" height="24" viewBox="0 0 24 24"><path d={ICONS.timer} fill="currentColor"/></svg>
-        </div>
-        <div class="field-content">
-          <label for="c-tempdir">{store.L.config.tempDir}</label>
-          <input type="text" id="c-tempdir" bind:value={store.config.tempdir} placeholder={store.L.config.autoPlaceholder} />
-        </div>
-        {#if store.config.tempdir}
-          <button class="mini-btn" onclick={resetTempDir} title={store.L.config.reset}>
-             ✕
-          </button>
-        {/if}
-      </div>
-      <div class="divider"></div>
       <div class="text-field-row">
         <div class="icon-slot">
           <svg width="24" height="24" viewBox="0 0 24 24"><path d={ICONS.ksu} fill="currentColor"/></svg>
@@ -81,6 +70,7 @@
       </div>
     </div>
   </section>
+  
   <section class="config-group">
     <div class="partition-card">
       <div class="partition-header">
@@ -97,6 +87,7 @@
       </div>
     </div>
   </section>
+  
   <section class="config-group">
     <div class="options-grid">
       <button 
@@ -130,6 +121,7 @@
     </div>
   </section>
 </div>
+
 <BottomActions>
   <button 
     class="btn-tonal" 
