@@ -10,9 +10,7 @@
     store.loadStatus();
   });
   function handleReboot() {
-    if (confirm("Reboot device?")) {
-        API.rebootDevice();
-    }
+    API.rebootDevice();
   }
   function copyDebugInfo() {
     const info = `Magic Mount v${store.version}\n` +
