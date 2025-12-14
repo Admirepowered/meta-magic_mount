@@ -23,7 +23,6 @@
     "androidLabel": "安卓版本",
     "kernelLabel": "内核版本",
     "selinuxLabel": "SELinux",
-    "reboot": "重启设备",
     "copy": "复制调试信息"
   },
   "config": {

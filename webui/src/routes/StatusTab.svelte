@@ -9,9 +9,6 @@
   onMount(() => {
     store.loadStatus();
   });
-  function handleReboot() {
-    API.rebootDevice();
-  }
   function copyDebugInfo() {
     const info = `Magic Mount v${store.version}\n` +
                  `Model: ${store.device.model}\n` +
@@ -100,10 +97,6 @@
   </div>
 </div>
 <BottomActions>
-  <button class="btn-tonal" onclick={handleReboot}>
-    <svg viewBox="0 0 24 24" width="20" height="20"><path d={ICONS.refresh} fill="currentColor"/></svg>
-    {store.L.status.reboot}
-  </button>
   <div class="spacer"></div>
   <button 
     class="btn-filled" 

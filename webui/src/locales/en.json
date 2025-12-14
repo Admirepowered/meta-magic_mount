@@ -25,7 +25,6 @@
     "androidLabel": "Android",
     "kernelLabel": "Kernel",
     "selinuxLabel": "SELinux",
-    "reboot": "Reboot Device",
     "copy": "Copy Info"
   },
   "config": {
