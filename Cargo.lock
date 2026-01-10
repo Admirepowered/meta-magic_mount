@@ -471,7 +471,7 @@ dependencies = [
 [[package]]
 name = "ksu"
 version = "0.1.0"
-source = "git+https://github.com/Tools-cx-app/ksu.git?tag=v0.1.0#e679108c6acdadc6e8bb1026c667a3bde3a1fb9a"
+source = "git+https://github.com/Tools-cx-app/ksu.git#47459ed31cf741d6046ff206c794c56b41e1e248"
 dependencies = [
  "anyhow",
  "libc",
